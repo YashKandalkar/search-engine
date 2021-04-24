@@ -25,7 +25,6 @@ export const SearchPage = () => {
     const searchQuery = urlParams.get("text");
     setText(searchQuery ?? "");
     if (searchQuery) {
-      console.log(window.location.search);
       fetch(
         "https://dev-search-api.herokuapp.com/search" + window.location.search
       )
@@ -37,15 +36,17 @@ export const SearchPage = () => {
             if (!urlsVisited.includes(el.url)) {
               urlsVisited.push(el.url);
               const t = new URL(el.url);
-              const pathname = t.pathname;
+              const pathname = trim(t.pathname, "/");
+              let tStr = pathname.substr(pathname.lastIndexOf("/") + 1);
+              tStr = tStr.replaceAll("-", " ");
+
               temp.result.push({
                 ...el,
-                title: pathname
-                  .substr(pathname.lastIndexOf("/") + 1)
-                  .replaceAll("-", " "),
+                title: tStr,
               });
             }
           });
+
           setResults(temp);
           setUrlsLoaded(true);
         })
@@ -137,7 +138,11 @@ export const SearchPage = () => {
                 </Link>
               </div>
 
-              <Text style={{}}>{result.text}</Text>
+              {result.text === "no text" ? (
+                ""
+              ) : (
+                <Text style={{}}>{result.text}</Text>
+              )}
             </Card>
           ))}
         </div>
@@ -145,3 +150,10 @@ export const SearchPage = () => {
     </Layout>
   );
 };
+
+function trim(s: string, c: string) {
+  if (c === "]") c = "\\]";
+  if (c === "^") c = "\\^";
+  if (c === "\\") c = "\\\\";
+  return s.replace(new RegExp("^[" + c + "]+|[" + c + "]+$", "g"), "");
+}
