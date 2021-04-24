@@ -1,9 +1,13 @@
-.App {
+@import "~antd/dist/antd.dark.css";
+@import url("https://fonts.googleapis.com/css2?family=Arvo&display=swap");
+
+#root {
   text-align: center;
+  height: 100vh;
 }
 
 .App-logo {
-  height: 40vmin;
+  height: 30vmin;
   pointer-events: none;
 }
 
@@ -35,4 +39,26 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.homeScreenSearch > span > span {
+  border-top-left-radius: 30px !important;
+  border-bottom-left-radius: 30px !important;
+}
+
+.homeScreenSearch > span > span > button,
+.homeScreenSearch > span > .ant-input-group-addon {
+  border-top-right-radius: 30px !important;
+  border-bottom-right-radius: 30px !important;
+}
+
+.searchTitle > code {
+  background: rgba(27, 27, 27, 0.4) !important;
+  padding: 10px !important;
+  /* border-radius: 30px; */
+  color: #eee;
+}
+
+.homeScreenContent > div.ant-image {
+  position: fixed;
 }
