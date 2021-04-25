@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Layout, Card, Input, Typography, Pagination, Tag } from "antd";
+import { Layout, Card, Input, Typography, Pagination, Tag, Empty } from "antd";
 import { CodeFilled } from "@ant-design/icons";
 import { useMediaQuery } from "react-responsive";
 import { Redirect, useHistory, useLocation } from "react-router";
@@ -33,7 +33,6 @@ export const SearchPage = () => {
   // TODO: ADD TAG FOR SO questions
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    console.log(window.location.search);
 
     const searchQuery = urlParams.get("text");
     setText(searchQuery ?? "");
@@ -47,7 +46,6 @@ export const SearchPage = () => {
           let pagesCount = (data.count ?? 1) / 15;
           if (pagesCount > 0) setPageCount(Math.ceil(pagesCount));
           else setPageCount(1);
-          console.log(data.count);
 
           const temp: ApiResponse = { result: [] };
           data.result.forEach((el) => {
@@ -67,9 +65,7 @@ export const SearchPage = () => {
                 temp.result.push(el);
               }
             }
-            console.log({ tag: el?.tags ?? "no tag" });
           });
-          console.log(temp);
 
           setResults(temp);
           setUrlsLoaded(true);
@@ -100,11 +96,6 @@ export const SearchPage = () => {
       window.location.reload();
     }
   };
-  console.log(
-    Number.parseInt(
-      new URLSearchParams(window.location.search).get("page") ?? "1"
-    )
-  );
 
   const urlParams = new URLSearchParams(window.location.search);
   return !(urlParams.get("text") ?? "").trim() ? (
@@ -166,65 +157,83 @@ export const SearchPage = () => {
             textAlign: "left",
           }}
         >
-          {Boolean(results?.result?.length)
-            ? results?.result?.map((result, ind) => (
-                <Card
-                  title={""}
-                  loading={!urlsLoaded}
-                  bordered={false}
-                  key={ind}
-                  style={{ margin: "32px 0" }}
+          {Boolean(results?.result?.length) && urlsLoaded ? (
+            results?.result?.map((result, ind) => (
+              <Card
+                title={""}
+                loading={!urlsLoaded}
+                bordered={false}
+                key={ind}
+                style={{ margin: "32px 0" }}
+              >
+                {result.url.startsWith("https://stackoverflow.com") ? (
+                  <StackOverflow style={{ marginRight: 6 }} />
+                ) : (
+                  <GFG style={{ marginRight: 6, width: "10px !important" }} />
+                )}
+                <Text
+                  type="secondary"
+                  style={{ fontSize: "0.8rem", width: "90%" }}
+                  ellipsis
                 >
-                  {result.url.startsWith("https://stackoverflow.com") ? (
-                    <StackOverflow style={{ marginRight: 6 }} />
-                  ) : (
-                    <GFG
-                      style={{ marginRight: 6, width: "10px !important" }}
-                    />
-                  )}
-                  <Text
-                    type="secondary"
-                    style={{ fontSize: "0.8rem", width: "90%" }}
+                  {result.url}
+                </Text>
+                <br />
+                <div style={{ margin: "6px 0", padding: 0 }}>
+                  <Link
+                    href={result.url}
+                    style={{ fontSize: "1.2rem", width: "90%" }}
                     ellipsis
                   >
-                    {result.url}
-                  </Text>
-                  <br />
-                  <div style={{ margin: "6px 0", padding: 0 }}>
-                    <Link
-                      href={result.url}
-                      style={{ fontSize: "1.2rem", width: "90%" }}
-                      ellipsis
-                    >
-                      {result.title}
-                    </Link>
-                  </div>
-                  {result.tags && (
-                    <>
+                    {result.title}
+                  </Link>
+                </div>
+                {result.tags && (
+                  <>
+                    {typeof result.tags === "string" ? (
                       <Tag style={{ marginBottom: 8 }}>{result.tags}</Tag>
-                      <br />
-                    </>
-                  )}
+                    ) : (
+                      result.tags
+                        .slice(0, isMobile ? 3 : 4)
+                        .map((tag, ind) => (
+                          <Tag
+                            key={ind}
+                            style={{ marginBottom: 8, marginRight: 10 }}
+                          >
+                            {tag}
+                          </Tag>
+                        ))
+                    )}
+                    <br />
+                  </>
+                )}
 
-                  {result.text === "no text" ? (
-                    ""
-                  ) : (
-                    <Text style={{}}>{result.text ?? ""}</Text>
-                  )}
-                </Card>
-              ))
-            : firstResult?.result?.map((_, ind) => (
-                <Card
-                  title={""}
-                  loading={!urlsLoaded}
-                  bordered={false}
-                  key={ind}
-                  style={{ margin: "32px 0" }}
-                />
-              ))}
+                {result.text === "no text" ? (
+                  ""
+                ) : (
+                  <Text style={{}}>{result.text ?? ""}</Text>
+                )}
+              </Card>
+            ))
+          ) : !urlsLoaded ? (
+            firstResult?.result?.map((_, ind) => (
+              <Card
+                title={""}
+                loading={!urlsLoaded}
+                bordered={false}
+                key={ind}
+                style={{ margin: "32px 0" }}
+              />
+            ))
+          ) : (
+            <Empty
+              style={{ marginTop: "20%" }}
+              description={"Could not find any results!"}
+            />
+          )}
         </div>
       </Content>
-      {urlsLoaded && (
+      {urlsLoaded && Boolean(results?.result?.length) && (
         <Pagination
           defaultCurrent={Number.parseInt(
             new URLSearchParams(window.location.search).get("page") ?? "1"

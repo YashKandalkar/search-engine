@@ -3,7 +3,7 @@ export interface ApiResponse {
     url: string;
     text: string | null;
     title?: string;
-    tags?: string;
+    tags?: string | string[];
   }[];
   count?: number;
 }
