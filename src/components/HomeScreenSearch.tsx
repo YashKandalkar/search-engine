@@ -9,8 +9,17 @@ export const HomeScreenSearch = () => {
   const history = useHistory();
 
   const onSearch = (text: string) => {
-    if (text.trim()) {
-      history.push("/search?text=" + encodeURI(text.trim()));
+    let trimmed = text.trim();
+    if (trimmed) {
+      if (trimmed.substr(0, 2) === "#g") {
+        window.open(
+          "https://www.google.com/search?q=" + encodeURI(trimmed.substr(3))
+        );
+        return;
+      } else {
+        history.push("/search?text=" + encodeURI(trimmed));
+        window.location.reload();
+      }
     }
   };
   return (
