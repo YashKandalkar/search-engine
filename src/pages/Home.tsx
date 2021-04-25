@@ -21,7 +21,7 @@ export const Home = () => {
       >
         <Image
           preview={false}
-          src={`https://source.unsplash.com/collection/762960/1800x550/`}
+          src={`https://source.unsplash.com/collection/116851/1800x550/`}
           style={{
             height: "100vh",
             width: "auto",

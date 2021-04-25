@@ -1,27 +1,39 @@
 import { useState, useEffect } from "react";
-import { Layout, Card, Input, Typography } from "antd";
+import { Layout, Card, Input, Typography, Pagination } from "antd";
 import { CodeFilled } from "@ant-design/icons";
 import { useMediaQuery } from "react-responsive";
 import { Redirect, useHistory } from "react-router";
-import { StackOverflow } from "../assets/icons";
+import { GFG, StackOverflow } from "../assets/icons";
 import { ApiResponse } from "../interfaces/ApiResponse";
 
 const { Content, Header } = Layout;
 const { Search } = Input;
 const { Title, Text, Link } = Typography;
 
+const blankRes = {
+  url: "",
+  text: "",
+};
+
+const firstResult = {
+  result: [blankRes, blankRes, blankRes, blankRes],
+};
+
 export const SearchPage = () => {
   const [urlsLoaded, setUrlsLoaded] = useState(false);
   const urlParamsOne = new URLSearchParams(window.location.search);
   const [text, setText] = useState(urlParamsOne.get("text"));
+  const [pageCount, setPageCount] = useState(1);
   const [results, setResults]: [ApiResponse | null, Function] = useState({
     result: [],
   });
   const isMobile = useMediaQuery({ query: "(max-width: 640px)" });
   const history = useHistory();
-
+  // TODO: ADD TAG FOR SO questions
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    console.log(window.location.search);
+
     const searchQuery = urlParams.get("text");
     setText(searchQuery ?? "");
     if (searchQuery) {
@@ -31,21 +43,31 @@ export const SearchPage = () => {
         .then((res) => res.json())
         .then((data: ApiResponse) => {
           const urlsVisited: string[] = [];
+          let pagesCount = (data.count ?? 1) / 15;
+          if (pagesCount > 0) setPageCount(Math.ceil(pagesCount));
+          else setPageCount(1);
+          console.log(data.count);
+
           const temp: ApiResponse = { result: [] };
           data.result.forEach((el) => {
             if (!urlsVisited.includes(el.url)) {
               urlsVisited.push(el.url);
-              const t = new URL(el.url);
-              const pathname = trim(t.pathname, "/");
-              let tStr = pathname.substr(pathname.lastIndexOf("/") + 1);
-              tStr = tStr.replaceAll("-", " ");
+              if (!el.title || el.title === "What\u2019s New") {
+                const t = new URL(el.url);
+                const pathname = trim(t.pathname, "/");
+                let tStr = pathname.substr(pathname.lastIndexOf("/") + 1);
+                tStr = tStr.replaceAll("-", " ");
 
-              temp.result.push({
-                ...el,
-                title: tStr,
-              });
+                temp.result.push({
+                  ...el,
+                  title: tStr,
+                });
+              } else {
+                temp.result.push(el);
+              }
             }
           });
+          console.log(temp);
 
           setResults(temp);
           setUrlsLoaded(true);
@@ -61,6 +83,19 @@ export const SearchPage = () => {
       window.location.reload();
     }
   };
+
+  const onPageChange = (page: number) => {
+    if (text?.trim()) {
+      history.push("/search?text=" + encodeURI(text.trim()) + "&page=" + page);
+      window.location.reload();
+    }
+  };
+  console.log(
+    Number.parseInt(
+      new URLSearchParams(window.location.search).get("page") ?? "1"
+    )
+  );
+
   const urlParams = new URLSearchParams(window.location.search);
   return !(urlParams.get("text") ?? "").trim() ? (
     <Redirect to="/" />
@@ -81,10 +116,16 @@ export const SearchPage = () => {
           style={{
             fontSize: isMobile ? "1.5rem" : "2.5rem",
             color: "#0288D1",
+            cursor: "pointer",
           }}
+          onClick={() => history.push("/")}
         />
         {!isMobile && (
-          <Title level={2} style={{ margin: "0 8px", color: "#0288D1" }}>
+          <Title
+            level={2}
+            style={{ margin: "0 8px", color: "#0288D1", cursor: "pointer" }}
+            onClick={() => history.push("/")}
+          >
             DevSearch
           </Title>
         )}
@@ -115,38 +156,66 @@ export const SearchPage = () => {
             textAlign: "left",
           }}
         >
-          {results?.result?.map((result) => (
-            <Card
-              title={""}
-              loading={!urlsLoaded}
-              bordered={false}
-              key={result.url}
-              style={{ margin: "32px 0" }}
-            >
-              <StackOverflow style={{ marginRight: 6 }} />
-              <Text
-                type="secondary"
-                style={{ fontSize: "0.8rem", width: "80%" }}
-                ellipsis
-              >
-                {result.url}
-              </Text>
-              <br />
-              <div style={{ margin: "6px 0", padding: 0 }}>
-                <Link href={result.url} style={{ fontSize: "1.2rem" }}>
-                  {result.title}
-                </Link>
-              </div>
+          {Boolean(results?.result?.length)
+            ? results?.result?.map((result, ind) => (
+                <Card
+                  title={""}
+                  loading={!urlsLoaded}
+                  bordered={false}
+                  key={ind}
+                  style={{ margin: "32px 0" }}
+                >
+                  {result.url.startsWith("https://stackoverflow.com") ? (
+                    <StackOverflow style={{ marginRight: 6 }} />
+                  ) : (
+                    <GFG
+                      style={{ marginRight: 6, width: "10px !important" }}
+                    />
+                  )}
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: "0.8rem", width: "80%" }}
+                    ellipsis
+                  >
+                    {result.url}
+                  </Text>
+                  <br />
+                  <div style={{ margin: "6px 0", padding: 0 }}>
+                    <Link href={result.url} style={{ fontSize: "1.2rem" }}>
+                      {result.title}
+                    </Link>
+                  </div>
 
-              {result.text === "no text" ? (
-                ""
-              ) : (
-                <Text style={{}}>{result.text}</Text>
-              )}
-            </Card>
-          ))}
+                  {result.text === "no text" ? (
+                    ""
+                  ) : (
+                    <Text style={{}}>{result.text ?? ""}</Text>
+                  )}
+                </Card>
+              ))
+            : firstResult?.result?.map((_, ind) => (
+                <Card
+                  title={""}
+                  loading={!urlsLoaded}
+                  bordered={false}
+                  key={ind}
+                  style={{ margin: "32px 0" }}
+                />
+              ))}
         </div>
       </Content>
+      {urlsLoaded && (
+        <Pagination
+          defaultCurrent={Number.parseInt(
+            new URLSearchParams(window.location.search).get("page") ?? "1"
+          )}
+          showSizeChanger={false}
+          showQuickJumper
+          onChange={onPageChange}
+          total={pageCount}
+          style={{ marginBottom: "32px" }}
+        />
+      )}
     </Layout>
   );
 };
