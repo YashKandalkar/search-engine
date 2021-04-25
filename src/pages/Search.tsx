@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Layout, Card, Input, Typography, Pagination } from "antd";
+import { Layout, Card, Input, Typography, Pagination, Tag } from "antd";
 import { CodeFilled } from "@ant-design/icons";
 import { useMediaQuery } from "react-responsive";
-import { Redirect, useHistory } from "react-router";
+import { Redirect, useHistory, useLocation } from "react-router";
 import { GFG, StackOverflow } from "../assets/icons";
 import { ApiResponse } from "../interfaces/ApiResponse";
 
@@ -28,6 +28,7 @@ export const SearchPage = () => {
     result: [],
   });
   const isMobile = useMediaQuery({ query: "(max-width: 640px)" });
+  const location = useLocation();
   const history = useHistory();
   // TODO: ADD TAG FOR SO questions
   useEffect(() => {
@@ -66,6 +67,7 @@ export const SearchPage = () => {
                 temp.result.push(el);
               }
             }
+            console.log({ tag: el?.tags ?? "no tag" });
           });
           console.log(temp);
 
@@ -75,7 +77,7 @@ export const SearchPage = () => {
         .catch(console.log);
     }
     return () => {};
-  }, []);
+  }, [location]);
 
   const onSearch = (text: string) => {
     if (text.trim()) {
@@ -174,17 +176,27 @@ export const SearchPage = () => {
                   )}
                   <Text
                     type="secondary"
-                    style={{ fontSize: "0.8rem", width: "80%" }}
+                    style={{ fontSize: "0.8rem", width: "90%" }}
                     ellipsis
                   >
                     {result.url}
                   </Text>
                   <br />
                   <div style={{ margin: "6px 0", padding: 0 }}>
-                    <Link href={result.url} style={{ fontSize: "1.2rem" }}>
+                    <Link
+                      href={result.url}
+                      style={{ fontSize: "1.2rem", width: "90%" }}
+                      ellipsis
+                    >
                       {result.title}
                     </Link>
                   </div>
+                  {result.tags && (
+                    <>
+                      <Tag style={{ marginBottom: 8 }}>{result.tags}</Tag>
+                      <br />
+                    </>
+                  )}
 
                   {result.text === "no text" ? (
                     ""

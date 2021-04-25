@@ -21,11 +21,11 @@ export const Home = () => {
       >
         <Image
           preview={false}
-          src={`https://source.unsplash.com/collection/116851/1800x550/`}
+          src={`https://source.unsplash.com/RCAhiGJsUUE/1920x900`}
           style={{
             height: "100vh",
             width: "auto",
-            filter: "blur(2px)",
+            // filter: "blur(3px)",
             transform: "scale(1.01)",
           }}
         />
